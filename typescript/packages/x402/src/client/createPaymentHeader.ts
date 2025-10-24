@@ -1,4 +1,6 @@
-import { createPaymentHeader as createPaymentHeaderExactEVM } from "../schemes/exact/evm/eip3009/client";
+import { createPaymentHeader as createPaymentHeaderEIP3009 } from "../schemes/exact/evm/eip3009/client";
+import { createPaymentHeader as createPaymentHeaderPermit } from "../schemes/exact/evm/permit/client";
+import { createPaymentHeader as createPaymentHeaderPermit2 } from "../schemes/exact/evm/permit2/client";
 import { createPaymentHeader as createPaymentHeaderExactSVM } from "../schemes/exact/svm/client";
 import { isEvmSignerWallet, isMultiNetworkSigner, isSvmSignerWallet, MultiNetworkSigner, Signer, SupportedEVMNetworks, SupportedSVMNetworks } from "../types/shared";
 import { PaymentRequirements } from "../types/verify";
@@ -29,11 +31,28 @@ export async function createPaymentHeader(
         throw new Error("Invalid evm wallet client provided");
       }
 
-      return await createPaymentHeaderExactEVM(
-        evmClient,
-        x402Version,
-        paymentRequirements,
-      );
+      // Route to appropriate client based on authorization type
+      switch (config?.evmConfig?.authorizationType) {
+        case "permit":
+          return await createPaymentHeaderPermit(
+            evmClient,
+            x402Version,
+            paymentRequirements,
+          );
+        case "permit2":
+          return await createPaymentHeaderPermit2(
+            evmClient,
+            x402Version,
+            paymentRequirements,
+          );
+        case "eip3009":
+        default:
+          return await createPaymentHeaderEIP3009(
+            evmClient,
+            x402Version,
+            paymentRequirements,
+          );
+      }
     }
     // svm
     if (SupportedSVMNetworks.includes(paymentRequirements.network)) {

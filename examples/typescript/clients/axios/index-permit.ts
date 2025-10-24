@@ -5,7 +5,7 @@ import { withPaymentInterceptor, decodeXPaymentResponse, createSigner, type Hex 
 config();
 
 const privateKey = process.env.PRIVATE_KEY as Hex | string;
-const baseURL = process.env.RESOURCE_SERVER_URL as string; // e.g. https://example.com
+const baseURL = process.env.RESOURCE_SERVER_URL as string; // e.g. http://localhost:3000
 const endpointPath = process.env.ENDPOINT_PATH as string; // e.g. /weather
 
 if (!baseURL || !privateKey || !endpointPath) {
@@ -14,38 +14,37 @@ if (!baseURL || !privateKey || !endpointPath) {
 }
 
 /**
- * This example shows how to use the x402-axios package with EIP-3009 authorization (default).
+ * This example shows how to use the x402-axios package with EIP-2612 Permit authorization.
  * 
- * EIP-3009 uses transferWithAuthorization for USDC and compatible tokens.
- * This is the default authorization method.
+ * EIP-2612 Permit allows off-chain approval signatures for ERC20 tokens that support the permit() function.
+ * This is useful for tokens like DAI, WETH, and many others that implement the EIP-2612 standard.
  *
  * To run this example, you need to set the following environment variables:
  * - PRIVATE_KEY: The private key of the signer
  * - RESOURCE_SERVER_URL: The URL of the resource server
  * - ENDPOINT_PATH: The path of the endpoint to call on the resource server
  *
- * For other authorization types, see:
- * - index-permit.ts: EIP-2612 Permit (for tokens with permit() function)
- * - index-permit2.ts: Permit2 (universal token approvals)
+ * Note: The token must support EIP-2612 permit() function
  */
 async function main(): Promise<void> {
   console.log("═══════════════════════════════════════════");
-  console.log("  x402-axios Example - EIP-3009 (Default)");
+  console.log("  x402-axios Example - EIP-2612 Permit");
   console.log("═══════════════════════════════════════════\n");
 
-  // const signer = await createSigner("solana-devnet", privateKey); // uncomment for solana
   const signer = await createSigner("base-sepolia", privateKey);
 
-  // Default authorization type is EIP-3009 (no need to specify)
+  // Create Axios instance with Permit authorization
   const api = withPaymentInterceptor(
     axios.create({
       baseURL,
     }),
     signer,
+    undefined,
+    { evmConfig: { authorizationType: "permit" } }, // Use EIP-2612 Permit
   );
 
   console.log(`🚀 Making request to: ${baseURL}${endpointPath}`);
-  console.log(`📝 Using authorization type: EIP-3009 (default)\n`);
+  console.log(`📝 Using authorization type: EIP-2612 Permit\n`);
 
   try {
     const response = await api.get(endpointPath);
@@ -68,3 +67,4 @@ async function main(): Promise<void> {
 }
 
 main();
+

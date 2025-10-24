@@ -199,35 +199,31 @@ export async function settle<transport extends Transport, chain extends Chain>(
     address: wallet.account.address,
   });
 
-  // Step 1 & 2: 同时发送两笔交易
-  const [permitTx, transferTx] = await Promise.all([
-    // Call permit to approve the spender
-    wallet.writeContract({
-      address: tokenAddress,
-      abi: erc20PermitABI,
-      functionName: "permit",
-      args: [owner as Address, spender as Address, BigInt(value), BigInt(deadline), v, r, s],
-      chain: wallet.chain as Chain,
-      nonce: txNonce,
-    }),
-    // Call transferFrom to transfer tokens to payTo address
-    wallet.writeContract({
-      address: tokenAddress,
-      abi: erc20PermitABI,
-      functionName: "transferFrom",
-      args: [owner as Address, paymentRequirements.payTo as Address, BigInt(value)],
-      chain: wallet.chain as Chain,
-      nonce: txNonce + 1,
-    }),
-  ]);
-
-  // 等待两笔交易都确认
-  const [, receipt] = await Promise.all([
-    wallet.waitForTransactionReceipt({ hash: permitTx }),
-    wallet.waitForTransactionReceipt({ hash: transferTx }),
-  ]);
-
-  if (receipt.status !== "success") {
+  // Call permit to approve the spender
+  const permitTx = await wallet.writeContract({
+    address: tokenAddress,
+    abi: erc20PermitABI,
+    functionName: "permit",
+    args: [owner as Address, spender as Address, BigInt(value), BigInt(deadline), v, r, s],
+    chain: wallet.chain as Chain,
+    nonce: txNonce,
+  });
+  await wallet.waitForTransactionReceipt({ hash: permitTx, confirmations: 1 });
+  // await new Promise(resolve => setTimeout(resolve, 3000));
+  // Call transferFrom to transfer tokens to payTo address
+  const transferTx = await wallet.writeContract({
+    address: tokenAddress,
+    abi: erc20PermitABI,
+    functionName: "transferFrom",
+    args: [owner as Address, paymentRequirements.payTo as Address, BigInt(value)],
+    chain: wallet.chain as Chain,
+    nonce: txNonce + 1,
+  });
+  const transferReceipt = await wallet.waitForTransactionReceipt({
+    hash: transferTx,
+    confirmations: 1,
+  });
+  if (transferReceipt.status !== "success") {
     return {
       success: false,
       errorReason: "transaction_failed",

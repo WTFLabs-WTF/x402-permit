@@ -7,7 +7,6 @@ import {
 } from "../../../../types/verify";
 import { createNonce, signAuthorization } from "./sign";
 import { encodePayment } from "../utils/paymentUtils";
-
 /**
  * Prepares an unsigned EIP-3009 payment header with the given sender address and payment requirements.
  *
@@ -100,7 +99,7 @@ export async function createPayment<transport extends Transport, chain extends C
  * @param client - The signer wallet instance used to create the payment header
  * @param x402Version - The version of the X402 protocol to use
  * @param paymentRequirements - The payment requirements containing scheme and network information
- * @returns A promise that resolves to the encoded EIP-3009 payment header string
+ * @returns A promise that resolves to the encoded payment header string
  */
 export async function createPaymentHeader(
   client: SignerWallet | LocalAccount,

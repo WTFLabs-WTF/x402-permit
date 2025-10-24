@@ -29,14 +29,31 @@ import {
  * @param axiosClient - The Axios instance to add the interceptor to
  * @param walletClient - A wallet client that can sign transactions and create payment headers
  * @param paymentRequirementsSelector - A function that selects the payment requirements from the response
- * @param config - Optional configuration for X402 operations (e.g., custom RPC URLs)
+ * @param config - Optional configuration for X402 operations (e.g., custom RPC URLs, authorization type)
  * @returns The modified Axios instance with the payment interceptor
  *
  * @example
  * ```typescript
+ * // Default EIP-3009 authorization (USDC transferWithAuthorization)
  * const client = withPaymentInterceptor(
  *   axios.create(),
  *   signer
+ * );
+ *
+ * // With EIP-2612 Permit authorization
+ * const client = withPaymentInterceptor(
+ *   axios.create(),
+ *   signer,
+ *   undefined,
+ *   { evmConfig: { authorizationType: "permit" } }
+ * );
+ *
+ * // With Permit2 authorization
+ * const client = withPaymentInterceptor(
+ *   axios.create(),
+ *   signer,
+ *   undefined,
+ *   { evmConfig: { authorizationType: "permit2" } }
  * );
  *
  * // With custom RPC configuration
@@ -44,7 +61,10 @@ import {
  *   axios.create(),
  *   signer,
  *   undefined,
- *   { svmConfig: { rpcUrl: "http://localhost:8899" } }
+ *   {
+ *     evmConfig: { rpcUrl: "https://custom-rpc.com" },
+ *     svmConfig: { rpcUrl: "http://localhost:8899" }
+ *   }
  * );
  *
  * // The client will automatically handle 402 responses
@@ -113,6 +133,23 @@ export function withPaymentInterceptor(
 }
 
 export { decodeXPaymentResponse } from "x402/shared";
-export { createSigner, type Signer, type MultiNetworkSigner, type X402Config } from "x402/types";
+export {
+  createSigner,
+  type Signer,
+  type MultiNetworkSigner,
+  type X402Config,
+  evm,
+} from "x402/types";
 export { type PaymentRequirementsSelector } from "x402/client";
 export type { Hex } from "viem";
+
+// Export Permit and Permit2 specific types and constants
+export {
+  type PermitEvmPayloadAuthorization,
+  type Permit2EvmPayloadAuthorization,
+  type PaymentRequirements,
+} from "x402/types";
+
+// Export PERMIT2_ADDRESS constant
+const { PERMIT2_ADDRESS } = evm;
+export { PERMIT2_ADDRESS };
