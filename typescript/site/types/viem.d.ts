@@ -2,13 +2,13 @@
 
 // This declares the module "x402/facilitator" to have a simplified verify function signature
 // that doesn't cause deep type instantiation issues
-declare module "x402/facilitator" {
+declare module "@wtflabs/x402/facilitator" {
   import {
     PaymentPayload,
     PaymentRequirements,
     VerifyResponse,
     SettleResponse,
-  } from "x402/types/verify";
+  } from "@wtflabs/x402/types/verify";
 
   // Define a minimal client type that works for both EVM and Solana signers
   type SimpleClient = {
